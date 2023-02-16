@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -14,7 +15,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/imroc/req"
+	"github.com/bendersilver/joura"
 )
 
 // journalctl --user -n 10 -f -o cat
@@ -25,35 +26,51 @@ type buf struct {
 	lastUnit string
 }
 
-type (
-	// Item -
-	Item struct {
-		Names []string `toml:"service_name"`
-		Tg    struct {
-			Token string   `toml:"token"`
-			Chats []string `toml:"chats"`
-		} `toml:"telegram"`
-	}
-	// Conf -
-	Conf struct {
-		Token string   `toml:"tg_token"`
-		Chats []string `toml:"tg_chats"`
-		Item  []Item   `toml:"item"`
-	}
-)
+// Joura -
+type Joura struct {
+	Service map[string]*joura.PkgConfig
+	cmd     []string
+}
 
-var cfg Conf
+func fatal(err error) {
+	fmt.Println("F", err)
+	os.Exit(1)
+}
 
 // id -u bot
 func main() {
-	_, err := toml.DecodeFile(path.Join(os.Getenv("CONF_PATH"), "joura.conf"), &cfg)
+	// err := joura.SetPkgConfig()
+	// if err != nil {
+	// 	fatal(err)
+	// }
+	joura.New()
+	fatal(fmt.Errorf("end"))
+
+	var j Joura
+	j.cmd = []string{"journalctl", "-f", "-o", "json", "-n", "0"}
+
+	_, err := toml.DecodeFile(path.Join(os.Getenv("CONF_PATH"), "pkg.cfg"), &j.Service)
+	if err != nil {
+		fatal(err)
+	}
+
+	for k, v := range j.Service {
+		if v.Pass {
+			delete(j.Service, k)
+			continue
+		}
+		fmt.Println(k, v)
+		j.cmd = append(j.cmd, "-u", k)
+	}
+
+	fmt.Println(j)
+	os.Exit(1)
 
 	cmd := exec.Command("journalctl", "--user", "-f", "-o", "json")
 	r, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	var b buf
 	go scan(bufio.NewScanner(r), &b)
 	go sender(&b)
@@ -105,11 +122,11 @@ func scan(s *bufio.Scanner, b *buf) {
 }
 
 func sender(b *buf) {
-	var resp struct {
-		OK      bool   `json:"ok"`
-		ErrCode int    `json:"error_code"`
-		Desc    string `json:"description"`
-	}
+	// var resp struct {
+	// 	OK      bool   `json:"ok"`
+	// 	ErrCode int    `json:"error_code"`
+	// 	Desc    string `json:"description"`
+	// }
 
 	var data struct {
 		ChatID int64  `json:"chat_id"`
@@ -135,21 +152,21 @@ func sender(b *buf) {
 			b.Unlock()
 			for _, id := range users {
 				data.ChatID = id
-				r, err := req.Post("https://api.telegram.org/bot"+os.Getenv("BOT")+"/sendMessage",
-					req.BodyJSON(data),
-				)
-				if err != nil {
-					log.Println(err)
-					continue
-				}
-				err = r.ToJSON(&resp)
-				if err != nil {
-					log.Println(err)
-					continue
-				}
-				if !resp.OK {
-					log.Println(resp.ErrCode, resp.Desc)
-				}
+				// r, err := req.Post("https://api.telegram.org/bot"+os.Getenv("BOT")+"/sendMessage",
+				// 	req.BodyJSON(data),
+				// )
+				// if err != nil {
+				// 	log.Println(err)
+				// 	continue
+				// }
+				// err = r.ToJSON(&resp)
+				// if err != nil {
+				// 	log.Println(err)
+				// 	continue
+				// }
+				// if !resp.OK {
+				// 	log.Println(resp.ErrCode, resp.Desc)
+				// }
 			}
 			if users == nil {
 				log.Println(data.Text)
