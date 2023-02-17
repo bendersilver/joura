@@ -52,6 +52,8 @@ func New() (*Joura, error) {
 	var c = []string{"--user", "-o", "json", "--since", "2023-02-16 17:20:10"}
 	// var cmd = []string{"-o", "json", "--utc", "--since", "YYYY-MM-DD HH:MM:SS", "-u", "unit_name"}
 	for range j.service {
+		fmt.Println(time.Now().Format("'2006-01-02 15:04:05'"))
+		fmt.Println(time.Now().UTC().Format("'2006-01-02 15:04:05'"))
 		// cmd[4], cmd[6] = v.Time.Format("'2006-01-02 15:04:05'"), k
 		// fmt.Println("W", v.time.Format("'2006-01-02 15:04:05'"))
 		// c[5] = v.time.Format("'2006-01-02 15:04:05'")
