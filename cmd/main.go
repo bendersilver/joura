@@ -5,17 +5,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
-	"path"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/BurntSushi/toml"
 	"github.com/bendersilver/joura"
+	"github.com/coreos/go-systemd/v22/sdjournal"
 )
 
 // journalctl --user -n 10 -f -o cat
@@ -39,50 +39,127 @@ func fatal(err error) {
 
 // id -u bot
 func main() {
+	r, err := sdjournal.NewJournalReader(sdjournal.JournalReaderConfig{
+		Since: time.Duration(-15) * time.Minute,
+		Matches: []sdjournal.Match{
+			{
+				Field: sdjournal.SD_JOURNAL_FIELD_SYSTEMD_UNIT,
+				Value: "NetworkManager-dispatcher",
+			},
+		},
+		Formatter: func(entry *sdjournal.JournalEntry) (string, error) {
+			b, err := json.Marshal(map[string]any{
+				"msg":  entry.Fields["MESSAGE"],
+				"unit": entry.Fields["UNIT"],
+				"time": entry.RealtimeTimestamp,
+			})
+			return string(b), err
+		},
+	})
+	if err != nil {
+		fmt.Println(err)
+		fatal(err)
+	}
+	defer r.Close()
+
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		fmt.Println(err)
+		fatal(err)
+	}
+	fmt.Printf("%s", b)
+	return
+	// 2023-02-17 11:42:28.814366
+	fmt.Println(time.Now().Add(-time.Hour * 12).Format("'2006-01-02 15:04:05'"))
+	fmt.Println(strings.Join([]string{"journalctl", "--user", "-o", "json", "--since", time.Now().Add(-time.Hour * 12).Format("'2006-01-02 15:04:05'")}, " "))
+
+	cmd := exec.Command("journalctl", "--user", "-o", "json", "--since", time.Now().Add(-time.Hour*12).Format("'2006-01-02 15:04:05'"))
+	rd, err := cmd.StdoutPipe()
+	if err != nil {
+		fmt.Println("1", err)
+		fatal(err)
+	}
+
+	err = cmd.Start()
+	if err != nil {
+		fmt.Println("2", err)
+		fatal(err)
+	}
+
+	b, err = ioutil.ReadAll(rd)
+	if err != nil {
+		fmt.Println("2", err)
+		fatal(err)
+	}
+	fmt.Printf("%s", b)
+
+	// var data struct {
+	// 	Msg       json.RawMessage `json:"MESSAGE"`
+	// 	Unit      string          `json:"_SYSTEMD_UNIT"`
+	// 	Timestamp int64           `json:"_SOURCE_REALTIME_TIMESTAMP,string"`
+	// }
+
+	// d := json.NewDecoder(rd)
+	// for d.More() {
+	// 	err = d.Decode(&data)
+	// 	if err != nil {
+	// 		fmt.Println("W", err)
+	// 	}
+	// 	fmt.Printf("read %v\n", data)
+	// 	fmt.Println(time.UnixMicro(data.Timestamp))
+	// }
+
+	err = cmd.Wait()
+	if err != nil {
+
+		fmt.Println("3", err)
+		fatal(err)
+	}
+	os.Exit(1)
 	// err := joura.SetPkgConfig()
 	// if err != nil {
 	// 	fatal(err)
 	// }
-	joura.New()
-	fatal(fmt.Errorf("end"))
+	// joura.New()
+	// fatal(fmt.Errorf("end"))
 
-	var j Joura
-	j.cmd = []string{"journalctl", "-f", "-o", "json", "-n", "0"}
+	// var j Joura
+	// j.cmd = []string{"journalctl", "-f", "-o", "json", "-n", "0"}
 
-	_, err := toml.DecodeFile(path.Join(os.Getenv("CONF_PATH"), "pkg.cfg"), &j.Service)
-	if err != nil {
-		fatal(err)
-	}
+	// _, err := toml.DecodeFile(path.Join(os.Getenv("CONF_PATH"), "pkg.cfg"), &j.Service)
+	// if err != nil {
+	// 	fatal(err)
+	// }
 
-	for k, v := range j.Service {
-		if v.Pass {
-			delete(j.Service, k)
-			continue
-		}
-		fmt.Println(k, v)
-		j.cmd = append(j.cmd, "-u", k)
-	}
+	// for k, v := range j.Service {
+	// 	if v.Pass {
+	// 		delete(j.Service, k)
+	// 		continue
+	// 	}
+	// 	fmt.Println(k, v)
+	// 	j.cmd = append(j.cmd, "-u", k)
+	// }
 
-	fmt.Println(j)
-	os.Exit(1)
+	// fmt.Println(j)
+	// os.Exit(1)
 
-	cmd := exec.Command("journalctl", "--user", "-f", "-o", "json")
-	r, err := cmd.StdoutPipe()
-	if err != nil {
-		log.Fatal(err)
-	}
-	var b buf
-	go scan(bufio.NewScanner(r), &b)
-	go sender(&b)
+	// cmd := exec.Command("journalctl", "--user", "-f", "-o", "json")
+	// r, err := cmd.StdoutPipe()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// var b buf
+	// go scan(bufio.NewScanner(r), &b)
+	// go sender(&b)
 
-	err = cmd.Start()
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.Wait()
-	if err != nil {
-		log.Fatal(err)
-	}
+	// err = cmd.Start()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// err = cmd.Wait()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 }
 
 func scan(s *bufio.Scanner, b *buf) {
