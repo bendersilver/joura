@@ -1,5 +1,10 @@
 package joura
 
+// #cgo LDFLAGS: -lsystemd
+// #include <systemd/sd-journal.h>
+// #include <stdlib.h>
+import "C"
+
 import (
 	"bytes"
 	"fmt"
@@ -7,14 +12,16 @@ import (
 	"os"
 	"path"
 	"sort"
-	"time"
 
 	"github.com/BurntSushi/toml"
 )
 
 // PkgConfig -
 type PkgConfig struct {
-	time     time.Time
+	time     C.uint64_t
+	match    *C.char
+	unit     string
+	level    int
 	buf      bytes.Buffer
 	Pass     bool               `toml:"pass"`
 	Telegram map[string][]int64 `toml:"telegram"`
