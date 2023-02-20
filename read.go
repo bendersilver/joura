@@ -6,8 +6,10 @@ package joura
 import "C"
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
+	"time"
 	"unsafe"
 )
 
@@ -69,9 +71,10 @@ func journalRead(p *PkgConfig) error {
 		if rc < 0 {
 			return errors.New("failed to get realtime timestamp: " + cErr(rc))
 		}
+		p.time++
 
 		if p.buf.Len() > 4000 {
-			break
+			continue
 		}
 
 		C.sd_journal_restart_data(j)
@@ -104,19 +107,23 @@ func journalRead(p *PkgConfig) error {
 			return err
 		}
 		lvl++
-		if lvl > p.level {
+		if lvl > p.Level {
 			continue
 		}
+
+		p.buf.WriteString(
+			fmt.Sprintf("%s %d | ",
+				time.UnixMicro(int64(p.time)).Format("15:04:05"), lvl))
 
 		msg, err = msgField(j, "MESSAGE")
 		if err != nil {
 			return err
 		}
 		p.buf.WriteString(msg)
-		p.buf.WriteString("\n")
+		p.buf.WriteString("\n\n")
 		if p.buf.Len() > 4000 {
 			p.buf.Truncate(4000)
-			p.buf.WriteString("\n\nmore...")
+			p.buf.WriteString("more...")
 
 		}
 

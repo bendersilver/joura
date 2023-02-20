@@ -21,10 +21,24 @@ type PkgConfig struct {
 	time     C.uint64_t
 	match    *C.char
 	unit     string
-	level    int
 	buf      bytes.Buffer
 	Pass     bool               `toml:"pass"`
+	Level    int                `toml:"log_level"`
 	Telegram map[string][]int64 `toml:"telegram"`
+}
+
+func (p *PkgConfig) clean() {
+	for k, v := range p.Telegram {
+		if len(v) == 0 {
+			delete(p.Telegram, k)
+		} else {
+			p.Telegram[k] = unq(p.Telegram[k])
+		}
+	}
+	if len(p.Telegram) == 0 {
+		p.Pass = true
+		p.Telegram = nil
+	}
 }
 
 // UserConfig
@@ -39,6 +53,7 @@ type (
 	Service struct {
 		Chats []string           `toml:"chats"`
 		Tg    map[string][]int64 `toml:"tele_chats"`
+		Level int                `toml:"log_level"`
 	}
 
 	// UserConfig -
@@ -90,7 +105,10 @@ func writeConf(c *UserConfig) error {
 	for name, sv := range c.Service {
 		cfg[name] = new(PkgConfig)
 		cfg[name].Telegram = map[string][]int64{}
-
+		if sv.Level == 0 {
+			sv.Level = 8
+		}
+		cfg[name].Level = sv.Level
 		// loop telegram
 		var token string
 		for _, tg := range sv.Chats {

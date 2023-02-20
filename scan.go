@@ -57,8 +57,8 @@ func New() (Joura, error) {
 		c.match = C.CString("_SYSTEMD_UNIT=" + c.unit)
 		c.time = C.uint64_t(time.Now().UnixMicro())
 
-		if c.level == 0 {
-			c.level = 8
+		if c.Level == 0 {
+			c.Level = 8
 		}
 	}
 
