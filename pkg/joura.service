@@ -1,5 +1,5 @@
 [Unit]
-Description=joura - fast memory sqlite storage pgsql  
+Description=joura - send systemd log to telegram
 After=network.target
 
 Requires=network.target

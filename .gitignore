@@ -1,4 +1,4 @@
 .env
 *.cfg
 *.conf
-joura
+pkg/joura-*
