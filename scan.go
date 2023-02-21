@@ -82,14 +82,20 @@ type (
 func (j Joura) Start() {
 	var err error
 	for range time.Tick(time.Second * 5) {
-		for _, c := range j {
+		for name, c := range j {
 			err = journalRead(c)
 			if err != nil {
 				fmt.Println(err)
 			}
-			c.send()
-			// fmt.Println(name, c)
-
+			err = c.send()
+			if err != nil {
+				fmt.Println(err)
+			}
+			c.clean()
+			if c.Telegram == nil {
+				fmt.Printf("W service `%s`: empty chats. pass\n", name)
+				delete(j, name)
+			}
 		}
 	}
 }
@@ -135,6 +141,5 @@ func New() (Joura, error) {
 			cfg[name].time = C.uint64_t(time.Now().UnixMicro())
 		}
 	}
-	fmt.Println(cfg)
 	return cfg, nil
 }

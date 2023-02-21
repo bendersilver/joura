@@ -49,7 +49,6 @@ func journalRead(p *service) error {
 	// match expression to the journal instance
 	// cmatch := C.CString("_SYSTEMD_UNIT=user@1000.service")
 	// defer C.free(unsafe.Pointer(cmatch))
-	fmt.Println(p.match)
 	rc = C.sd_journal_add_match(j, unsafe.Pointer(p.match), C.strlen(p.match))
 	if rc != 0 {
 		return errors.New("rror setting journal match: " + cErr(rc))
