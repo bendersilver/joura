@@ -24,6 +24,7 @@ fi
 if [ ! -f "$BIN" ]
 then
         sudo wget https://github.com/bendersilver/joura/releases/download/$V/joura-$V-$(lsb_release -sc)-$(uname -p) -q --show-progress -O "$BIN"
+        sudo chmod +x $BIN
 fi
 
 if [ ! -f "$DIR"/user.conf ]
