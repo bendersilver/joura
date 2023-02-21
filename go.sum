@@ -2,7 +2,3 @@ github.com/BurntSushi/toml v1.2.1 h1:9F2/+DoOYIOksmaJFPw1tGFy1eDnIJXg+UHjuD8lTak
 github.com/BurntSushi/toml v1.2.1/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/imroc/req v0.3.2 h1:M/JkeU6RPmX+WYvT2vaaOL0K+q8ufL5LxwvJc4xeB4o=
 github.com/imroc/req v0.3.2/go.mod h1:F+NZ+2EFSo6EFXdeIbpfE9hcC233id70kf0byW97Caw=
-github.com/laher/argo v0.0.0-20140722103944-11d91c83cc0f h1:fQ8JwxJN77cxE0foUmSHkKQebcxyd6vAfWCv7Bs5r34=
-github.com/laher/argo v0.0.0-20140722103944-11d91c83cc0f/go.mod h1:Ymqfd31XvifvQ001Ty97DbYjQoeJPnb1WVkFhGeNYA4=
-github.com/laher/debgo-v0.2 v0.0.0-20140721103107-b076d9197d2a h1:lWtBddA4GUrbehqekhjv3qsX4HYeBAuCfSWsvdf009g=
-github.com/laher/debgo-v0.2 v0.0.0-20140721103107-b076d9197d2a/go.mod h1:njtodhmVyQh1La4cv66X9jf8q08v6S8Wd1/uiJRw+j4=
