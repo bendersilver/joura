@@ -6,8 +6,10 @@ package joura
 import "C"
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
+	"time"
 	"unsafe"
 )
 
@@ -30,7 +32,7 @@ func msgField(j *C.sd_journal, name string) (string, error) {
 	return strings.TrimPrefix(fl, name+"="), nil
 }
 
-func journalRead(p *PkgConfig) error {
+func journalRead(p *service) error {
 	var j *C.sd_journal
 	rc := C.sd_journal_open(&j, C.SD_JOURNAL_LOCAL_ONLY)
 	if rc != 0 {
@@ -47,7 +49,7 @@ func journalRead(p *PkgConfig) error {
 	// match expression to the journal instance
 	// cmatch := C.CString("_SYSTEMD_UNIT=user@1000.service")
 	// defer C.free(unsafe.Pointer(cmatch))
-
+	fmt.Println(p.match)
 	rc = C.sd_journal_add_match(j, unsafe.Pointer(p.match), C.strlen(p.match))
 	if rc != 0 {
 		return errors.New("rror setting journal match: " + cErr(rc))
@@ -69,9 +71,10 @@ func journalRead(p *PkgConfig) error {
 		if rc < 0 {
 			return errors.New("failed to get realtime timestamp: " + cErr(rc))
 		}
+		p.time++
 
 		if p.buf.Len() > 4000 {
-			break
+			continue
 		}
 
 		C.sd_journal_restart_data(j)
@@ -108,15 +111,19 @@ func journalRead(p *PkgConfig) error {
 			continue
 		}
 
+		p.buf.WriteString(
+			fmt.Sprintf("%s %d | ",
+				time.UnixMicro(int64(p.time)).Format("15:04:05"), lvl))
+
 		msg, err = msgField(j, "MESSAGE")
 		if err != nil {
 			return err
 		}
 		p.buf.WriteString(msg)
-		p.buf.WriteString("\n")
+		p.buf.WriteString("\n\n")
 		if p.buf.Len() > 4000 {
 			p.buf.Truncate(4000)
-			p.buf.WriteString("\n\nmore...")
+			p.buf.WriteString("more...")
 
 		}
 

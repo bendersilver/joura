@@ -6,7 +6,11 @@ import (
 	"github.com/imroc/req"
 )
 
-func (p *PkgConfig) send() error {
+func (p *service) send() error {
+	if p.buf.Len() == 0 {
+		return nil
+	}
+	var clean bool
 	var uri string
 	var data = struct {
 		ChatID int64  `json:"chat_id"`
@@ -41,16 +45,18 @@ BASE:
 			if !teleRsp.OK {
 				switch teleRsp.ErrCode {
 				case 403, 400:
+					clean = true
 					if len(chats) == ix+1 {
 						chats = chats[:ix]
 					} else {
-						chats = append(chats[:ix], chats[ix+1])
+						chats = append(chats[:ix], chats[ix+1:]...)
 					}
 
 					p.Telegram[token] = chats
 					fmt.Printf("chat %d: %d %s\n", data.ChatID, teleRsp.ErrCode, teleRsp.Desc)
 					continue
 				case 401:
+					clean = true
 					delete(p.Telegram, token)
 					fmt.Printf("token %s....: %d %s\n", token[:10], teleRsp.ErrCode, teleRsp.Desc)
 					continue BASE
@@ -60,9 +66,9 @@ BASE:
 			}
 			ix++
 		}
-		if _, ok := p.Telegram[token]; ok && len(chats) == 0 {
-			delete(p.Telegram, token)
-		}
+	}
+	if clean {
+		p.clean()
 	}
 	return nil
 }

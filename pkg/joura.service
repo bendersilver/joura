@@ -1,0 +1,18 @@
+[Unit]
+Description=joura - fast memory sqlite storage pgsql  
+After=network.target
+
+Requires=network.target
+
+[Service]
+StartLimitInterval=5
+StartLimitBurst=10
+
+ExecStart=/usr/local/joura/v0.0.1/joura
+KillMode=process
+
+Environment=CONF_PATH=/etc/joura
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
