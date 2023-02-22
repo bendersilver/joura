@@ -46,12 +46,26 @@ func journalRead(p *service) error {
 		return errors.New("error seeking provided until value: " + cErr(rc))
 	}
 
-	// match expression to the journal instance
-	// cmatch := C.CString("_SYSTEMD_UNIT=user@1000.service")
-	// defer C.free(unsafe.Pointer(cmatch))
-	rc = C.sd_journal_add_match(j, unsafe.Pointer(p.match), C.strlen(p.match))
+	// match expression to the journal instance _SYSTEMD_UNIT
+	sunit := C.CString("_SYSTEMD_UNIT=" + p.unit)
+	defer C.free(unsafe.Pointer(sunit))
+	rc = C.sd_journal_add_match(j, unsafe.Pointer(sunit), C.strlen(sunit))
 	if rc != 0 {
-		return errors.New("rror setting journal match: " + cErr(rc))
+		return errors.New("error setting journal match: " + cErr(rc))
+	}
+
+	// inserts a logical OR in the match list
+	rc = C.sd_journal_add_disjunction(j)
+	if rc < 0 {
+		return errors.New("rror set OR match: " + cErr(rc))
+	}
+
+	// match expression to the journal instance UNIT
+	unit := C.CString("UNIT=" + p.unit)
+	defer C.free(unsafe.Pointer(unit))
+	rc = C.sd_journal_add_match(j, unsafe.Pointer(unit), C.strlen(unit))
+	if rc != 0 {
+		return errors.New("error setting journal match: " + cErr(rc))
 	}
 
 	for {
@@ -82,25 +96,6 @@ func journalRead(p *service) error {
 			return err
 		}
 
-		// switch msg {
-		// case "0":
-		// 	msg = "EMERG "
-		// case "1":
-		// 	msg = "ALERT "
-		// case "2":
-		// 	msg = "CRIT "
-		// case "3":
-		// 	msg = "ERROR "
-		// case "4":
-		// 	msg = "WRAN "
-		// case "5":
-		// 	msg = "NOTICE "
-		// case "6":
-		// 	msg = "INFO "
-		// case "7":
-		// 	msg = "DEBUG "
-		// }
-
 		lvl, err := strconv.Atoi(msg)
 		if err != nil {
 			return err
@@ -120,12 +115,12 @@ func journalRead(p *service) error {
 		}
 		p.buf.WriteString(msg)
 		p.buf.WriteString("\n\n")
+
 		if p.buf.Len() > 4000 {
 			p.buf.Truncate(4000)
 			p.buf.WriteString("more...")
 
 		}
-
 	}
 
 	return nil

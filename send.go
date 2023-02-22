@@ -2,6 +2,8 @@ package joura
 
 import (
 	"fmt"
+	"os"
+	"time"
 
 	"github.com/imroc/req"
 )
@@ -10,13 +12,15 @@ func (p *service) send() error {
 	if p.buf.Len() == 0 {
 		return nil
 	}
+	hostname, _ := os.Hostname()
+
 	var clean bool
 	var uri string
 	var data = struct {
 		ChatID int64  `json:"chat_id"`
 		Text   string `json:"text"`
 	}{
-		Text: p.unit + "\n\n" + p.buf.String(),
+		Text: fmt.Sprintf("%s | %s\n\n", p.unit, hostname) + p.buf.String(),
 	}
 	defer p.buf.Reset()
 
@@ -65,6 +69,7 @@ BASE:
 				}
 			}
 			ix++
+			time.Sleep(time.Second / 20)
 		}
 	}
 	if clean {

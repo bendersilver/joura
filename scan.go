@@ -137,8 +137,8 @@ func New() (Joura, error) {
 			if !strings.HasSuffix(cfg[name].unit, ".service") {
 				cfg[name].unit += ".service"
 			}
-			cfg[name].match = C.CString("_SYSTEMD_UNIT=" + cfg[name].unit)
-			cfg[name].time = C.uint64_t(time.Now().UnixMicro())
+			cfg[name].time = C.uint64_t(time.Now().UnixMicro() - 100)
+			fmt.Printf("I start watch service `%s`\n", cfg[name].unit)
 		}
 	}
 	return cfg, nil
