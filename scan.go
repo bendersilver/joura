@@ -7,8 +7,6 @@ import "C"
 import (
 	"bytes"
 	"fmt"
-	"os"
-	"path"
 	"sort"
 	"strings"
 	"time"
@@ -101,9 +99,9 @@ func (j Joura) Start() {
 }
 
 // New -
-func New() (Joura, error) {
+func New(fileConf string) (Joura, error) {
 	var c UserConfig
-	_, err := toml.DecodeFile(path.Join(os.Getenv("CONF_PATH"), "user.conf"), &c)
+	_, err := toml.DecodeFile(fileConf, &c)
 	if err != nil {
 		return nil, err
 	}

@@ -8,10 +8,9 @@ Requires=network.target
 StartLimitInterval=5
 StartLimitBurst=10
 
-ExecStart=/usr/local/joura/v0.0.1/joura
+ExecStart=/usr/local/joura/joura -c /etc/joura/joura.conf
 KillMode=process
 
-Environment=CONF_PATH=/etc/joura
 Restart=on-failure
 
 [Install]

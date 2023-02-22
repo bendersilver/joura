@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -10,7 +11,10 @@ import (
 // journalctl --user -n 10 -f -o cat
 
 func main() {
-	j, err := joura.New()
+	var file string
+	flag.StringVar(&file, "c", "/etc/joura/joura.conf", "set configuration file (default: /etc/joura/joura.conf)")
+
+	j, err := joura.New(file)
 
 	if err != nil {
 		fmt.Println(err)
