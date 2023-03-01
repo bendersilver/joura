@@ -1,0 +1,8 @@
+Package: joura
+Version: 0.0.2
+Section: main
+Priority: optional
+Architecture: amd64
+Depends: libsystemd-dev
+Maintainer: Kirill <bendersilver@gmail.com>
+Description: Send systemd log to telegram

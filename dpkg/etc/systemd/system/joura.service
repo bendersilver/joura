@@ -1,0 +1,17 @@
+[Unit]
+Description=joura - send systemd log to telegram
+After=network.target
+
+Requires=network.target
+
+[Service]
+StartLimitInterval=5
+StartLimitBurst=10
+
+ExecStart=/usr/bin/joura -c /etc/joura/default.conf
+KillMode=process
+
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

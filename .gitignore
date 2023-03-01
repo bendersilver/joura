@@ -1,5 +1,0 @@
-.env
-*.cfg
-*.conf
-pkg/
-snap/
