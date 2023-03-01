@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER='0.0.2'
+VER='0.1.1'
 
 
 

@@ -8,7 +8,7 @@ import (
 	"github.com/bendersilver/joura"
 )
 
-const Version = "0.0.2"
+const Version = "0.1.1"
 
 func main() {
 	var file string
