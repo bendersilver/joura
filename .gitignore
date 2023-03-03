@@ -1,1 +1,2 @@
 *.deb
+dpkg/usr/bin/joura
