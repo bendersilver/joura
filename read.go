@@ -13,6 +13,17 @@ import (
 	"unsafe"
 )
 
+var nameLvl = map[int]string{
+	0: "EMERG",
+	1: "ALERT",
+	2: "CRIT",
+	3: "ERROR",
+	4: "WARNING",
+	5: "NOTICE",
+	6: "INFO",
+	7: "DEBUG",
+}
+
 func cErr(ret C.int) string {
 	return C.GoString(C.strerror(ret))
 }
@@ -86,7 +97,7 @@ func journalRead(p *service) error {
 		}
 		p.time++
 
-		if p.buf.Len() > 4000 {
+		if p.buf.Len() > 3072 {
 			continue
 		}
 
@@ -100,27 +111,24 @@ func journalRead(p *service) error {
 		if err != nil {
 			return err
 		}
-		lvl++
 		if lvl > p.level {
 			continue
 		}
-
-		p.buf.WriteString(
-			fmt.Sprintf("%s %d | ",
-				time.UnixMicro(int64(p.time)).Format("15:04:05"), lvl))
-
 		msg, err = msgField(j, "MESSAGE")
 		if err != nil {
 			return err
 		}
-		p.buf.WriteString(msg)
-		p.buf.WriteString("\n\n")
-
-		if p.buf.Len() > 4000 {
-			p.buf.Truncate(4000)
-			p.buf.WriteString("more...")
-
+		if len(msg)+p.buf.Len() > 3072 {
+			msg = msg[:3072-p.buf.Len()] + "\ncropped message"
 		}
+
+		p.buf.WriteString(
+			fmt.Sprintf("*%s %s*\n```",
+				nameLvl[lvl],
+				time.UnixMicro(int64(p.time)).Format("15:04:05")))
+
+		p.buf.WriteString(msg)
+		p.buf.WriteString("```")
 	}
 
 	return nil

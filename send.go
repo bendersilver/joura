@@ -5,68 +5,56 @@ import (
 	"os"
 	"time"
 
-	"github.com/imroc/req"
+	"github.com/bendersilver/jlog"
+	"github.com/bendersilver/nanobot"
 )
 
 func (p *service) send() error {
 	if p.buf.Len() == 0 {
 		return nil
 	}
-	hostname, _ := os.Hostname()
+	defer func() {
+		p.buf.Reset()
+		p.bufferFull = false
+	}()
 
 	var clean bool
-	var uri string
-	var data = struct {
-		ChatID int64  `json:"chat_id"`
-		Text   string `json:"text"`
-	}{
-		Text: fmt.Sprintf("%s | %s\n\n", p.unit, hostname) + p.buf.String(),
-	}
-	defer p.buf.Reset()
+	var body nanobot.Body
+	var res *nanobot.Result
 
-	var teleRsp struct {
-		OK      bool   `json:"ok"`
-		ErrCode int    `json:"error_code"`
-		Desc    string `json:"description"`
-	}
+	hostname, _ := os.Hostname()
+	body.Text = fmt.Sprintf("*%s | %s*\n\n", p.unit, hostname) + p.buf.String()
+	body.Mode = "Markdown"
+
 BASE:
-	for token, chats := range p.Telegram {
-		uri = "https://api.telegram.org/bot" + token + "/sendMessage"
+	for bot, chats := range p.Telegram {
 		var ix int
 		for {
 			if len(chats) <= ix {
 				break
 			}
-			data.ChatID = chats[ix]
-			rsp, err := req.Post(uri, req.BodyJSON(data))
-			if err != nil {
-				return err
-			}
-			err = rsp.ToJSON(&teleRsp)
-			if err != nil {
-				return err
-			}
-			if !teleRsp.OK {
-				switch teleRsp.ErrCode {
-				case 403, 400:
-					clean = true
-					if len(chats) == ix+1 {
-						chats = chats[:ix]
-					} else {
-						chats = append(chats[:ix], chats[ix+1:]...)
-					}
+			body.ChatID = chats[ix]
+			res = bot.SendMessage(&body)
 
-					p.Telegram[token] = chats
-					fmt.Printf("chat %d: %d %s\n", data.ChatID, teleRsp.ErrCode, teleRsp.Desc)
-					continue
-				case 401:
-					clean = true
-					delete(p.Telegram, token)
-					fmt.Printf("token %s....: %d %s\n", token[:10], teleRsp.ErrCode, teleRsp.Desc)
-					continue BASE
-				default:
-					fmt.Printf("%+v", teleRsp)
+			switch res.Status {
+			case nanobot.OK:
+			case nanobot.BadChat:
+				clean = true
+				if len(chats) == ix+1 {
+					chats = chats[:ix]
+				} else {
+					chats = append(chats[:ix], chats[ix+1:]...)
 				}
+				p.Telegram[bot] = chats
+				jlog.Warningf("chat %d: %d %s\n", body.ChatID, res.Code, res.Desc)
+				continue
+			case nanobot.BadToken:
+				clean = true
+				delete(p.Telegram, bot)
+				jlog.Warningf("token XXXXXXXXXX: %d %s\n", res.Code, res.Desc)
+				continue BASE
+			default:
+				jlog.Warningf("%d %s\n", res.Code, res.Desc)
 			}
 			ix++
 			time.Sleep(time.Second / 20)

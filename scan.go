@@ -6,12 +6,13 @@ package joura
 import "C"
 import (
 	"bytes"
-	"fmt"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/bendersilver/jlog"
+	"github.com/bendersilver/nanobot"
 )
 
 // Joura -
@@ -19,12 +20,13 @@ type Joura map[string]*service
 
 // service -
 type service struct {
-	time     C.uint64_t
-	match    *C.char
-	unit     string
-	buf      bytes.Buffer
-	level    int
-	Telegram map[string][]int64
+	time       C.uint64_t
+	match      *C.char
+	unit       string
+	buf        bytes.Buffer
+	bufferFull bool
+	level      int
+	Telegram   map[*nanobot.Bot][]int64
 }
 
 func (s *service) clean() {
@@ -83,15 +85,15 @@ func (j Joura) Start() {
 		for name, c := range j {
 			err = journalRead(c)
 			if err != nil {
-				fmt.Println(err)
+				jlog.Error(err)
 			}
 			err = c.send()
 			if err != nil {
-				fmt.Println(err)
+				jlog.Error(err)
 			}
 			c.clean()
 			if c.Telegram == nil {
-				fmt.Printf("W service `%s`: empty chats. pass\n", name)
+				jlog.Warningf("service `%s`: empty chats. pass\n", name)
 				delete(j, name)
 			}
 		}
@@ -100,6 +102,7 @@ func (j Joura) Start() {
 
 // New -
 func New(fileConf string) (Joura, error) {
+	nanobot.New("")
 	var c UserConfig
 	_, err := toml.DecodeFile(fileConf, &c)
 	if err != nil {
@@ -109,26 +112,31 @@ func New(fileConf string) (Joura, error) {
 	// loop servises
 	for name, sv := range c.Service {
 		cfg[name] = new(service)
-		cfg[name].Telegram = map[string][]int64{}
+		cfg[name].Telegram = map[*nanobot.Bot][]int64{}
 		if sv.Level == 0 {
 			sv.Level = 8
 		}
 		cfg[name].level = sv.Level
 
 		// loop telegram
-		var token string
+		var bot *nanobot.Bot
 		for _, tg := range sv.Chats {
 			if tele, ok := c.Defaut[tg]; ok {
-				token = tele.Token
+				bot, err = nanobot.New(tele.Token)
+				if err != nil {
+					jlog.Error(err)
+					continue
+				}
 			} else {
-				fmt.Printf("W service `%s`: telegram key `%s` not found. pass\n", name, tg)
+				jlog.Warningf("service `%s`: telegram key `%s` not found. pass\n", name, tg)
 				continue
 			}
-			cfg[name].Telegram[token] = append(cfg[name].Telegram[token], c.Defaut[tg].Chats...)
+
+			cfg[name].Telegram[bot] = append(cfg[name].Telegram[bot], c.Defaut[tg].Chats...)
 		}
 		cfg[name].clean()
 		if cfg[name].Telegram == nil {
-			fmt.Printf("W service `%s`: empty chats. pass\n", name)
+			jlog.Warningf("service `%s`: empty chats. pass\n", name)
 			delete(cfg, name)
 		} else {
 			cfg[name].unit = name
@@ -136,7 +144,7 @@ func New(fileConf string) (Joura, error) {
 				cfg[name].unit += ".service"
 			}
 			cfg[name].time = C.uint64_t(time.Now().UnixMicro() - 100)
-			fmt.Printf("I start watch service `%s`\n", cfg[name].unit)
+			jlog.Noticef("start watch service `%s`\n", cfg[name].unit)
 		}
 	}
 	return cfg, nil

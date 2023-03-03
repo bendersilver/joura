@@ -1,4 +1,6 @@
 github.com/BurntSushi/toml v1.2.1 h1:9F2/+DoOYIOksmaJFPw1tGFy1eDnIJXg+UHjuD8lTak=
 github.com/BurntSushi/toml v1.2.1/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
-github.com/imroc/req v0.3.2 h1:M/JkeU6RPmX+WYvT2vaaOL0K+q8ufL5LxwvJc4xeB4o=
-github.com/imroc/req v0.3.2/go.mod h1:F+NZ+2EFSo6EFXdeIbpfE9hcC233id70kf0byW97Caw=
+github.com/bendersilver/jlog v0.1.1 h1:np8zYRxJkoqsS3cdct3IlFaS+vxNcoO4zRK1pullrw8=
+github.com/bendersilver/jlog v0.1.1/go.mod h1:ZZrFJRpIsnoxG4LyEpc+I0iTKPeetV+g9VOtC/RCA2w=
+github.com/bendersilver/nanobot v0.1.2 h1:C1l1potRrAHaE1WZ6g9A03Rqp0EOv8Hu0xADq0NWi50=
+github.com/bendersilver/nanobot v0.1.2/go.mod h1:YWC4pS9mJ8M15QR/fY83nMdjMu6pQijn/T5E3TmKNnE=
