@@ -5,6 +5,7 @@ After=network.target
 Requires=network.target
 
 [Service]
+Environment="JLOGSD=1"
 StartLimitInterval=5
 StartLimitBurst=10
 

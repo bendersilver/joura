@@ -6,6 +6,9 @@ package joura
 import "C"
 import (
 	"bytes"
+	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -20,13 +23,12 @@ type Joura map[string]*service
 
 // service -
 type service struct {
-	time       C.uint64_t
-	match      *C.char
-	unit       string
-	buf        bytes.Buffer
-	bufferFull bool
-	level      int
-	Telegram   map[*nanobot.Bot][]int64
+	time     C.uint64_t
+	match    *C.char
+	unit     string
+	buf      bytes.Buffer
+	level    int
+	Telegram map[*nanobot.Bot][]int64
 }
 
 func (s *service) clean() {
@@ -101,7 +103,47 @@ func (j Joura) Start() {
 }
 
 // New -
-func New(fileConf string) (Joura, error) {
+func New(fileConf, dirConf string) (Joura, error) {
+	var files []string
+	if dirConf != "" {
+		err := filepath.Walk(dirConf, func(path string, info os.FileInfo, err error) error {
+
+			if err != nil {
+
+				fmt.Println(err)
+				return nil
+			}
+
+			if !info.IsDir() && filepath.Ext(path) == ".conf" {
+				files = append(files, path)
+			}
+
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		files = append(files, fileConf)
+	}
+
+	parseConfig(files...)
+	jlog.Fatal("-")
+
+	// var c Conf
+	// for _, f := range files {
+	// 	b, err := ioutil.ReadFile(f)
+	// 	if err != nil {
+	// 		jlog.Warning(err)
+	// 		continue
+	// 	}
+	// 	err = yaml.Unmarshal(b, &c)
+	// 	if err != nil {
+	// 		jlog.Warning(err)
+	// 		continue
+	// 	}
+	// }
+
 	var c UserConfig
 	_, err := toml.DecodeFile(fileConf, &c)
 	if err != nil {

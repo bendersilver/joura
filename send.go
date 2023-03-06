@@ -13,10 +13,7 @@ func (p *service) send() error {
 	if p.buf.Len() == 0 {
 		return nil
 	}
-	defer func() {
-		p.buf.Reset()
-		p.bufferFull = false
-	}()
+	defer p.buf.Reset()
 
 	var clean bool
 	var body nanobot.Body
