@@ -57,26 +57,26 @@ func journalRead(p *service) error {
 		return errors.New("error seeking provided until value: " + cErr(rc))
 	}
 
-	// match expression to the journal instance _SYSTEMD_UNIT
-	sunit := C.CString("_SYSTEMD_UNIT=" + p.unit)
-	defer C.free(unsafe.Pointer(sunit))
-	rc = C.sd_journal_add_match(j, unsafe.Pointer(sunit), C.strlen(sunit))
-	if rc != 0 {
-		return errors.New("error setting journal match: " + cErr(rc))
-	}
+	var free []*C.char
+	defer func() {
+		for _, c := range free {
+			C.free(unsafe.Pointer(c))
+		}
+	}()
 
-	// inserts a logical OR in the match list
-	rc = C.sd_journal_add_disjunction(j)
-	if rc < 0 {
-		return errors.New("rror set OR match: " + cErr(rc))
-	}
-
-	// match expression to the journal instance UNIT
-	unit := C.CString("UNIT=" + p.unit)
-	defer C.free(unsafe.Pointer(unit))
-	rc = C.sd_journal_add_match(j, unsafe.Pointer(unit), C.strlen(unit))
-	if rc != 0 {
-		return errors.New("error setting journal match: " + cErr(rc))
+	for i, m := range p.match {
+		free = append(free, C.CString(m))
+		rc = C.sd_journal_add_match(j, unsafe.Pointer(free[i]), C.strlen(free[i]))
+		if rc != 0 {
+			return errors.New("error setting journal match: " + cErr(rc))
+		}
+		if i+1 != len(p.match) {
+			// inserts a logical OR in the match list
+			rc = C.sd_journal_add_disjunction(j)
+			if rc < 0 {
+				return errors.New("rror set OR match: " + cErr(rc))
+			}
+		}
 	}
 
 	for {
@@ -123,12 +123,14 @@ func journalRead(p *service) error {
 		}
 
 		p.buf.WriteString(
-			fmt.Sprintf("*%s %s*\n```",
+			fmt.Sprintf("*%s | %s*\n```",
 				nameLvl[lvl],
-				time.UnixMicro(int64(p.time)).Format("15:04:05")))
+				time.UnixMicro(int64(p.time)).
+					UTC().
+					Format("2006-01-02 15:04:05.999 UTC"))) //))
 
 		p.buf.WriteString(msg)
-		p.buf.WriteString("```")
+		p.buf.WriteString("```\n")
 	}
 
 	return nil

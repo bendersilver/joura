@@ -2,8 +2,12 @@ github.com/BurntSushi/toml v1.2.1 h1:9F2/+DoOYIOksmaJFPw1tGFy1eDnIJXg+UHjuD8lTak
 github.com/BurntSushi/toml v1.2.1/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/bendersilver/jlog v0.1.1 h1:np8zYRxJkoqsS3cdct3IlFaS+vxNcoO4zRK1pullrw8=
 github.com/bendersilver/jlog v0.1.1/go.mod h1:ZZrFJRpIsnoxG4LyEpc+I0iTKPeetV+g9VOtC/RCA2w=
+github.com/bendersilver/jlog v0.1.2 h1:svLhpbtsC3ozRQ/OZ5eM9BCx9s/jisLG9TPRpN2FQ2I=
+github.com/bendersilver/jlog v0.1.2/go.mod h1:ZZrFJRpIsnoxG4LyEpc+I0iTKPeetV+g9VOtC/RCA2w=
 github.com/bendersilver/nanobot v0.1.2 h1:C1l1potRrAHaE1WZ6g9A03Rqp0EOv8Hu0xADq0NWi50=
 github.com/bendersilver/nanobot v0.1.2/go.mod h1:YWC4pS9mJ8M15QR/fY83nMdjMu6pQijn/T5E3TmKNnE=
+github.com/bendersilver/nanobot v0.1.3 h1:XXS7rCRyeVkP/mxYqVxipsUzuYsxzRMcK+mb47m8F8Q=
+github.com/bendersilver/nanobot v0.1.3/go.mod h1:YWC4pS9mJ8M15QR/fY83nMdjMu6pQijn/T5E3TmKNnE=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=

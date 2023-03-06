@@ -15,50 +15,44 @@ func (p *service) send() error {
 	}
 	defer p.buf.Reset()
 
-	var clean bool
+	// var clean bool
 	var body nanobot.Body
 	var res *nanobot.Result
 
 	hostname, _ := os.Hostname()
-	body.Text = fmt.Sprintf("*%s | %s*\n\n", p.unit, hostname) + p.buf.String()
+	body.Text = fmt.Sprintf("%s | %s\n\n", p.unit, hostname) + p.buf.String()
 	body.Mode = "Markdown"
 
 BASE:
-	for bot, chats := range p.Telegram {
+	for tk, t := range p.tg {
 		var ix int
 		for {
-			if len(chats) <= ix {
+			if len(t.chats) <= ix {
 				break
 			}
-			body.ChatID = chats[ix]
-			res = bot.SendMessage(&body)
+			body.ChatID = t.chats[ix]
+			res = t.bot.SendMessage(&body)
 
 			switch res.Status {
 			case nanobot.OK:
 			case nanobot.BadChat:
-				clean = true
-				if len(chats) == ix+1 {
-					chats = chats[:ix]
+				if len(t.chats) == ix+1 {
+					t.chats = t.chats[:ix]
 				} else {
-					chats = append(chats[:ix], chats[ix+1:]...)
+					t.chats = append(t.chats[:ix], t.chats[ix+1:]...)
 				}
-				p.Telegram[bot] = chats
-				jlog.Warningf("chat %d: %d %s\n", body.ChatID, res.Code, res.Desc)
+				jlog.Warningf("token '%s...' chat %d: %d %s", tk[:10], body.ChatID, res.Code, res.Desc)
 				continue
 			case nanobot.BadToken:
-				clean = true
-				delete(p.Telegram, bot)
-				jlog.Warningf("token XXXXXXXXXX: %d %s\n", res.Code, res.Desc)
+				delete(p.tg, tk)
+				jlog.Warningf("token '%s...': %d %s", tk[:10], res.Code, res.Desc)
 				continue BASE
 			default:
-				jlog.Warningf("%d %s\n", res.Code, res.Desc)
+				jlog.Warningf("%d %s", res.Code, res.Desc)
 			}
 			ix++
 			time.Sleep(time.Second / 20)
 		}
-	}
-	if clean {
-		p.clean()
 	}
 	return nil
 }
