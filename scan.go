@@ -93,7 +93,7 @@ func (j Joura) Start() {
 			}
 			c.clean()
 			if c.Telegram == nil {
-				jlog.Warningf("service `%s`: empty chats. pass\n", name)
+				jlog.Warningf("service '%s': empty chats. pass\n", name)
 				delete(j, name)
 			}
 		}
@@ -102,7 +102,6 @@ func (j Joura) Start() {
 
 // New -
 func New(fileConf string) (Joura, error) {
-	nanobot.New("")
 	var c UserConfig
 	_, err := toml.DecodeFile(fileConf, &c)
 	if err != nil {
@@ -128,7 +127,7 @@ func New(fileConf string) (Joura, error) {
 					continue
 				}
 			} else {
-				jlog.Warningf("service `%s`: telegram key `%s` not found. pass\n", name, tg)
+				jlog.Warningf("service '%s': telegram key '%s...' not found. pass\n", name, tg[:5])
 				continue
 			}
 
@@ -136,7 +135,7 @@ func New(fileConf string) (Joura, error) {
 		}
 		cfg[name].clean()
 		if cfg[name].Telegram == nil {
-			jlog.Warningf("service `%s`: empty chats. pass\n", name)
+			jlog.Warningf("service '%s': empty chats. pass\n", name)
 			delete(cfg, name)
 		} else {
 			cfg[name].unit = name
@@ -144,7 +143,7 @@ func New(fileConf string) (Joura, error) {
 				cfg[name].unit += ".service"
 			}
 			cfg[name].time = C.uint64_t(time.Now().UnixMicro() - 100)
-			jlog.Noticef("start watch service `%s`\n", cfg[name].unit)
+			jlog.Noticef("start watch service '%s'\n", cfg[name].unit)
 		}
 	}
 	return cfg, nil
