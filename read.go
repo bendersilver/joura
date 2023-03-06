@@ -121,16 +121,13 @@ func journalRead(p *service) error {
 		if len(msg)+p.buf.Len() > 3072 {
 			msg = msg[:3072-p.buf.Len()] + "\ncropped message"
 		}
-
-		p.buf.WriteString(
-			fmt.Sprintf("*%s | %s*\n```",
-				nameLvl[lvl],
-				time.UnixMicro(int64(p.time)).
-					UTC().
-					Format("2006-01-02 15:04:05.999 UTC"))) //))
-
-		p.buf.WriteString(msg)
-		p.buf.WriteString("```\n")
+		fmt.Fprintf(&p.buf, "*%s | %s*\n```\n%s\n```\n",
+			nameLvl[lvl],
+			time.UnixMicro(int64(p.time)).
+				UTC().
+				Format("2006-01-02 15:04:05.999 UTC"),
+			msg,
+		)
 	}
 
 	return nil

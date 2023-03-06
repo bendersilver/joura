@@ -51,7 +51,7 @@ func parseConfig(files ...string) (Joura, error) {
 	var cfg Joura = make(map[string]*service)
 	for name, srvc := range c.S {
 		cfg[name] = new(service)
-		cfg[name].time = C.uint64_t(time.Now().UnixMicro() - 10)
+		cfg[name].time = C.uint64_t(time.Now().UnixMicro() - 1000)
 		cfg[name].tg = make(map[string]*tgBot)
 		if srvc.Level == 0 {
 			srvc.Level = 8
