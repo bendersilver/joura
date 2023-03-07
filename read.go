@@ -78,7 +78,8 @@ func journalRead(p *service) error {
 			}
 		}
 	}
-
+	var curLvl, lastLvl int
+	lastLvl = -1
 	for {
 		// advances the read pointer into the journal by one entry
 		rc = C.sd_journal_next(j)
@@ -107,27 +108,36 @@ func journalRead(p *service) error {
 			return err
 		}
 
-		lvl, err := strconv.Atoi(msg)
+		curLvl, err = strconv.Atoi(msg)
 		if err != nil {
 			return err
 		}
-		if lvl > p.level {
+		if curLvl > p.level {
 			continue
 		}
 		msg, err = msgField(j, "MESSAGE")
 		if err != nil {
 			return err
 		}
-		if len(msg)+p.buf.Len() > 3072 {
-			msg = msg[:3072-p.buf.Len()] + "\ncropped message"
+		if len(msg) > 512 {
+			msg = msg[:512] + fmt.Sprintf("\ncropped message (%d)\n", len(msg))
 		}
-		fmt.Fprintf(&p.buf, "*%s | %s*\n```\n%s\n```\n",
-			nameLvl[lvl],
-			time.UnixMicro(int64(p.time)).
-				UTC().
-				Format("2006-01-02 15:04:05.999 UTC"),
-			msg,
-		)
+
+		if curLvl != lastLvl {
+			if p.buf.Len() > 0 {
+				p.buf.WriteString("```\n")
+			}
+			fmt.Fprintf(&p.buf, "*%s | %s*\n```\n",
+				nameLvl[curLvl],
+				time.UnixMicro(int64(p.time)).
+					UTC().
+					Format("2006-01-02 15:04:05.999 UTC"),
+			)
+
+		}
+		p.buf.WriteString(msg)
+		p.buf.WriteRune('\n')
+		lastLvl = curLvl
 	}
 
 	return nil

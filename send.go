@@ -20,7 +20,7 @@ func (p *service) send() error {
 	var res *nanobot.Result
 
 	hostname, _ := os.Hostname()
-	body.Text = fmt.Sprintf("%s | %s\n\n", p.unit, hostname) + p.buf.String()
+	body.Text = fmt.Sprintf("%s | %s\n\n", p.unit, hostname) + p.buf.String() + "```\n"
 	body.Mode = "Markdown"
 
 BASE:

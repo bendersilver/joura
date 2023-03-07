@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/bendersilver/jlog"
@@ -39,6 +40,7 @@ func (t *tgBot) clean() {
 
 // service -
 type service struct {
+	sync.Mutex
 	time  C.uint64_t
 	unit  string
 	match []string
